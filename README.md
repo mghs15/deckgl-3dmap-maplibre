@@ -5,6 +5,8 @@ deck.gl を用いて国土地理院のデータを 3D 風に表示する試行
 
 https://github.com/mghs15/deckgl_3dseamlessmap
 
+（関連ブログ：https://qiita.com/mg_kudo/items/6079ac10b7994e391228）
+
 ライブラリの最新化の他、[既存のレポジトリ](https://github.com/mghs15/deckgl_3dseamlessmap)と比較し、以下の点を改良
 * turf.js の `simplify()` を利用し、品質を犠牲にパフォーマンスを向上
 * ZL15 に限らず、どの ZL でもデータを取得できるように変更
