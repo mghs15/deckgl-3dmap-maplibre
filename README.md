@@ -8,7 +8,7 @@ https://github.com/mghs15/deckgl_3dseamlessmap
 （関連ブログ：https://qiita.com/mg_kudo/items/6079ac10b7994e391228 ）
 
 ライブラリの最新化の他、[既存のレポジトリ](https://github.com/mghs15/deckgl_3dseamlessmap)と比較し、以下の点を改良
-* turf.js の `simplify()` を利用し、品質を犠牲にパフォーマンスを向上
+* 等高線データに対して、turf.js の `simplify()` を利用して頂点数を削減することで、品質を犠牲にパフォーマンスを向上
 * ZL15 に限らず、どの ZL でもデータを取得できるように変更
 * 高さの強調機能を実装
 * 等高線データだけではなく、標高タイルを用いた実装も追加
