@@ -34,7 +34,7 @@ HTML には以下の通り記載
 <link href="https://unpkg.com/maplibre-gl@5.0.0/dist/maplibre-gl.css" rel='stylesheet' />
 ```
 
-レイヤを追加する実装の際は以下の通り
+レイヤを追加する実装の際は以下の通り（現状の試行範囲では、高さの強調を反映する際に、`deck.MapboxOverlay` を作り直さないとうまく反映されない）
 ```
 const g = {}; // deck.gl 由来の情報を格納するためのグローバル変数
 g.deckOverlay = new deck.MapboxOverlay({
@@ -62,6 +62,9 @@ map.addControl(g.deckOverlay);
 ```
 
 特に、deck.gl 由来のレイヤを削除するためには、以下のようなコードが必要
+
+（note: `g.deckOverlay.finalize()` でも良いかもしれない）
+
 ```
 if(g.deckOverlay){
     map.removeControl(g.deckOverlay);
