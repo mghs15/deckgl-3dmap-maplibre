@@ -196,11 +196,11 @@ async function action(){
   console.log("等高線データを取得中...");
   g.d.contour = await getGeojson("LineStringWithZ", "Cntr", "v", zl);
   //console.log(g.d.contour);
-  if(g.d.contour.length == 0){
-    alert("データ取得範囲に等高線データがありませんでした。");
-    document.getElementById("message").innerText = "";
-    return;
-  }
+  //if(g.d.contour.length == 0){
+  //  alert("データ取得範囲に等高線データがありませんでした。");
+  //  document.getElementById("message").innerText = "";
+  //  return;
+  //}
   console.log("道路データを取得中...");
   g.d.road = await getGeojson("LineString", "RdCL", "v", zl);
   console.log("鉄道データを取得中...");
