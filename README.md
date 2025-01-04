@@ -1,7 +1,7 @@
 # deckgl-3dmap-maplibre
 deck.gl を用いて国土地理院のデータを 3D 風に表示する試行
 
-以下のレポジトリをベースに、最新の deck.gl (v9)、MapLibre GL JS (v5)等、最新版を利用し、国土地理院最適化ベクトルタイル（PMTiles）の三次元風の表現を行ったもの。
+以下のレポジトリをベースに、最新の deck.gl (v9)、MapLibre GL JS (v5)等、最新版を利用し、国土地理院最適化ベクトルタイル（PMTiles）の三次元風の表現を行ったサイト。
 
 https://github.com/mghs15/deckgl_3dseamlessmap
 
@@ -34,12 +34,12 @@ HTML には以下の通り記載
 
 レイヤを追加する実装の際は以下の通り
 ```
-  const g = {}; // deck.gl 由来の情報を格納するためのグローバル変数
-  g.deckOverlay = new deck.MapboxOverlay({
+const g = {}; // deck.gl 由来の情報を格納するためのグローバル変数
+g.deckOverlay = new deck.MapboxOverlay({
     interleaved: true, layers: []
-  });
+});
 
-  const myDeckLayer = new deck.PathLayer({
+const myDeckLayer = new deck.PathLayer({
     id: 'my-deck-layer-id,
     data: data,
     pickable: true,
@@ -48,23 +48,23 @@ HTML には以下の通り記載
     getPath: d => d.path.,
     getColor: d => [200,160,60],
     getWidth: d => 2
-  });
+});
 
-  g.deckOverlay.setProps({
+g.deckOverlay.setProps({
     layers: [
-      myeckLayer,
+      myeDckLayer,
       // ...
     ]
   });
-  map.addControl(g.deckOverlay);
+map.addControl(g.deckOverlay);
 ```
 
 特に、deck.gl 由来のレイヤを削除するためには、以下のようなコードが必要
 ```
- if(g.deckOverlay){
+if(g.deckOverlay){
     map.removeControl(g.deckOverlay);
     delete g.deckOverlay;
-  }
+}
 ```
 
 ## 参考資料・使用データ
