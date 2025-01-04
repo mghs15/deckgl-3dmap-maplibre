@@ -25,6 +25,8 @@ https://github.com/mghs15/deckgl_3dseamlessmap
 
 deck.gl v9 で Mapbox/MapLibre と統合して利用する場合、利用方法が v8 と異なっていたので、以下、使用方法をメモ。
 
+（現状の試行範囲では、高さの強調を反映する際に、`deck.MapboxOverlay` を作り直さないとうまく反映されない）
+
 HTML には以下の通り記載
 ```
 <!-- deck.gl -->
@@ -34,7 +36,7 @@ HTML には以下の通り記載
 <link href="https://unpkg.com/maplibre-gl@5.0.0/dist/maplibre-gl.css" rel='stylesheet' />
 ```
 
-レイヤを追加する実装の際は以下の通り（現状の試行範囲では、高さの強調を反映する際に、`deck.MapboxOverlay` を作り直さないとうまく反映されない）
+レイヤを追加する実装の際は以下の通り
 ```
 const g = {}; // deck.gl 由来の情報を格納するためのグローバル変数
 g.deckOverlay = new deck.MapboxOverlay({
