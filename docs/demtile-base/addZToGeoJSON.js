@@ -117,7 +117,7 @@ async function addZPropToGeoJSON(geojson, getElev, option = {}) {
   }
 
   // Return the new GeoJSON
-  console.log(features);
+  //console.log(features);
   return {
     type: "FeatureCollection",
     features: features,

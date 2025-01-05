@@ -33,7 +33,7 @@ function getGeojson(geom_type, source_layer, source, zl, filter){
       return Promise.resolve(collection.features);
     });
     
-  }else if(geom_type == "Polygon"){
+  } else if(geom_type == "Polygon"){
     let outputOption = { 
       zl:zl, propZ: "vt_alti" 
     };
@@ -41,6 +41,15 @@ function getGeojson(geom_type, source_layer, source, zl, filter){
     return addZPropToGeoJSON(geojson, getElevTileValue, outputOption)
     .then( collection => {
       return Promise.resolve(collection); // これはGeoJSONのまま返す
+    });
+  } else {
+    let outputOption = { 
+      zl:zl, propZ: "vt_alti" 
+    };
+    
+    return addZToGeoJSON(geojson, getElevTileValue, outputOption)
+    .then( collection => {
+      return Promise.resolve(collection.features);
     });
   }
   
@@ -56,12 +65,14 @@ function getElevTileValue(cn, option){
   const pow2_16 = Math.pow(2, 16);
   const pow2_23 = Math.pow(2, 23);
   const pow2_24 = Math.pow(2, 24);
-     
+  
+  
+    
   // データの取得・表示
   return getRasterTilePixel(cn, option)
   .then(({r, g, b}) => {
-  
-    let h = 0;
+    
+    let h = 0;   
 
     if (r != 128 || g != 0 || b != 0) {
       const d = r * pow2_16 + g * pow2_8 + b;
@@ -79,6 +90,7 @@ function getElevTileValue(cn, option){
     
   })
   .catch((err) => {
+    let h = 0;   
     console.error(err);
     return Promise.resolve(h);
   });

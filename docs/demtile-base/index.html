@@ -18,6 +18,7 @@
 <!-- self-made -->
 <script src="./addZToGeoJSON.js"></script>
 <script src="./getGeojson.js"></script>
+<script src="./iconMapping.js"></script>
 <style>
 body { margin:0; padding:0; }
 #map {
@@ -73,9 +74,19 @@ button.local {
 <div id='map'></div>
 <div id='menu'>
   <span>MapLibre-v5+deck.gl-v9<br>（標高タイル使用ver）</span>
-  <button type="button" class="local" id="get3dData" onclick="action()" >3D</button>
-  <input type="checkbox" class="local" id="switchBack" onchange="switchBack();" checked>背景地図
-  <input type="checkbox" class="local" id="showTerrain" onchange="addTerrain()" />地形を表示<br>
+  <hr>
+  <span>データ取得・表示の選択</span><br>
+  <input type="checkbox" class="local" id="showRoad" onchange="set3dLayers();" checked>道路
+  <input type="checkbox" class="local" id="showRailway" onchange="set3dLayers();" checked>鉄道
+  <input type="checkbox" class="local" id="showBuilding" onchange="set3dLayers();" checked>建物
+  <input type="checkbox" class="local" id="showContour" onchange="set3dLayers();" checked>等高線<br>
+  <input type="checkbox" class="local" id="showText" onchange="set3dLayers();" checked>注記
+  <input type="checkbox" class="local" id="showIcon" onchange="set3dLayers();" checked>記号
+  <button type="button" class="local" id="get3dData" onclick="action()" >3D データ取得</button>
+  <hr>
+  <span>表示オプション</span><br>
+  <input type="checkbox" class="local" id="switchBack" onchange="switchBack();" checked>背景地図<br>
+  <input type="checkbox" class="local" id="showTerrain" onchange="addTerrain()" />地形を表示（試験中）<br>
   <input type="checkbox" class="local" id="showTileBoundary" onchange="addTileboundary()" checked/>タイル図郭を表示<br>
   高さ強調：<input type="number" class="local" id="elevScale" onchange="set3dLayers()" min="0" value="1"/><br>
   <div><a id="download">取得データのダウンロード</a></div>
@@ -94,7 +105,7 @@ maplibregl.addProtocol("pmtiles", protocol.tile);
 const map = new maplibregl.Map({
   container: 'map', // container id
   hash: true, //add #position on URL
-  style: 'https://mghs15.github.io/styling-tools-for-gsi-optbv/dark.json', 
+  style: 'https://mghs15.github.io/styling-tools-for-gsi-optbv/gray.json', 
   center: [139.78148, 35.768793], // starting position [lng, lat]
   zoom: 9, // starting zoom
   minZoom: 6,
@@ -210,32 +221,36 @@ async function action(){
   
   
   //データの読み込みと加工
-  console.log("等高線データを取得中...");
-  g.d.contour = await getGeojson("LineStringWithZ", "Cntr", "v", zl);
-  //console.log(g.d.contour);
-  //if(g.d.contour.length == 0){
-  //  alert("データ取得範囲に等高線データがありませんでした。");
-  //  document.getElementById("message").innerText = "";
-  //  return;
-  //}
-  console.log("道路データを取得中...");
-  g.d.road = await getGeojson("LineString", "RdCL", "v", zl);
-  console.log("鉄道データを取得中...");
-  g.d.railway = await getGeojson("LineString", "RailCL", "v", zl);
-  console.log("建物データを取得中...");
-  g.d.building = await getGeojson("Polygon", "BldA", "v", zl);
+  if(document.getElementById("showContour").checked){
+    console.log("等高線データを取得中...");
+    g.d.contour = await getGeojson("LineStringWithZ", "Cntr", "v", zl);
+  } else { g.d.contour = [] }
   
-  const {contour, road, railway, building} = g.d;
+  if(document.getElementById("showRoad").checked){
+    console.log("道路データを取得中...");
+    g.d.road = await getGeojson("LineString", "RdCL", "v", zl);
+  } else { g.d.road = [] }
+  
+  if(document.getElementById("showRailway").checked){
+    console.log("鉄道データを取得中...");
+    g.d.railway = await getGeojson("LineString", "RailCL", "v", zl);
+  } else { g.d.railway = [] }
+  
+  if(document.getElementById("showText").checked || document.getElementById("showIcon").checked){
+    console.log("注記・記号データを取得中...");
+    g.d.symbol = await getGeojson("Point", "Anno", "v", zl);
+  } else { g.d.symbol = [] }
+  
+  if(document.getElementById("showBuilding").checked){
+    console.log("建物データを取得中...");
+    g.d.building = await getGeojson("Polygon", "BldA", "v", zl);
+  } else { g.d.building = [] }
+  
+  
+  const {contour, road, railway, symbol, building} = g.d;
   
   //ダウンロード準備
-  /*
-  const resutls_obj = {
-    "contour": contour,
-    "road": road,
-    "railway": railway,
-    "building": building
-  };
-  */
+  console.log(g.d);
   const results_string = JSON.stringify(g.d, null, 4);
   setdownload(results_string, filename, 'download'); //ダウンロード準備
   
@@ -251,7 +266,7 @@ async function action(){
 // データの加工
 const setStyleInfo = () => {
   
-  const {contour, road, railway, building} = g.d;
+  const {contour, road, railway, building, symbol} = g.d;
   
   //道路データの加工
   for(i in road){
@@ -376,54 +391,149 @@ const set3dLayers = () => {
     interleaved: true, layers: []
   });
   
-  const {contour, road, railway, building} = g.d;
+  const {contour, road, railway, building, symbol} = g.d;
   
   const scale = +document.getElementById("elevScale").value || 0;
   
   //Custom(DeckGL)利用--------------------------------------------------
-  //道路
-  const myRoadDeckLayer = new deck.PathLayer({
-    id: 'path-layer-road',
-    data: road,
-    pickable: true,
-    widthScale: 3,
-    widthMinPixels: 1,
-    getPath: d => d.geometry.coordinates.map(v => [v[0], v[1], v[2] * scale]),
-    getColor: d => d.properties["color"],
-    getWidth: d => d.properties["width"]
-  });
   
-  //鉄道
-  const myRailwayDeckLayer = new deck.PathLayer({
-    id: 'path-layer-railway',
-    data: railway,
-    pickable: true,
-    widthScale: 1,
-    widthMinPixels: 2,
-    getPath: d => d.geometry.coordinates.map(v => [v[0], v[1], v[2] * scale]),
-    getColor: d => d.properties["color"],
-    getWidth: d => d.properties["width"]
-  });
+  // 基本のレイヤを格納
+  const deckLayers = [];
   
-  //等高線
-  const myContourDeckLayer = new deck.PathLayer({
-    id: 'path-layer-contour',
-    data: contour,
-    pickable: true,
-    widthScale: 1,
-    widthMinPixels: 1,
-    getPath: d => d.geometry.coordinates.map(v => [v[0], v[1], v[2] * scale]),
-    getColor: d => [200,160,60],
-    getWidth: d => 2
-  });
+  if(document.getElementById("showRoad").checked){
+    //道路
+    const myRoadDeckLayer = new deck.PathLayer({
+      id: 'path-layer-road',
+      data: road,
+      pickable: true,
+      widthScale: 3,
+      widthMinPixels: 1,
+      getPath: d => d.geometry.coordinates.map(v => [v[0], v[1], v[2] * scale]),
+      getColor: d => d.properties["color"],
+      getWidth: d => d.properties["width"]
+    });
+    deckLayers.push(myRoadDeckLayer);
+  }
   
+  if(document.getElementById("showRailway").checked){
+    //鉄道
+    const myRailwayDeckLayer = new deck.PathLayer({
+      id: 'path-layer-railway',
+      data: railway,
+      pickable: true,
+      widthScale: 1,
+      widthMinPixels: 2,
+      getPath: d => d.geometry.coordinates.map(v => [v[0], v[1], v[2] * scale]),
+      getColor: d => d.properties["color"],
+      getWidth: d => d.properties["width"]
+    });
+    deckLayers.push(myRailwayDeckLayer);
+  }
+  
+  if(document.getElementById("showContour").checked){
+    //等高線
+    const myContourDeckLayer = new deck.PathLayer({
+      id: 'path-layer-contour',
+      data: contour,
+      pickable: true,
+      widthScale: 1,
+      widthMinPixels: 1,
+      getPath: d => d.geometry.coordinates.map(v => [v[0], v[1], v[2] * scale]),
+      getColor: [200,160,60],
+      getWidth: 2
+    });
+    deckLayers.push(myContourDeckLayer);
+  }
+  
+  if(document.getElementById("showIcon").checked){
+    //記号
+    const myIconDeckLayer = new deck.IconLayer({
+      id: 'IconLayer',
+      data: symbol,
+      iconAtlas: "https://gsi-cyberjapan.github.io/optimal_bvmap/sprite/std.png",
+      iconMapping: "https://gsi-cyberjapan.github.io/optimal_bvmap/sprite/std.json",
+      getIcon: d => {
+        const code = d.properties["vt_code"];
+        const iconName = showIcon(code);
+        //console.log(code, iconName);
+        return iconName;
+      },
+      getPosition: d => { 
+        const v = d.geometry.coordinates;
+        return [v[0], v[1], v[2] * scale + 0];
+      },
+      getSize: 48,
+      getColor: [255,0,0],
+      pickable: true
+    });
+    deckLayers.push(myIconDeckLayer);
+  }
+  
+  if(document.getElementById("showText").checked){
+    //注記
+    const text = symbol.filter( f => f.properties["vt_text"]);
+    const vOffset = 100;
+    const myTextDeckLayer = new deck.TextLayer({
+      id: 'text-layer-symbol',
+      data: text,
+      characterSet: "auto",
+      pickable: true,
+      getAlignmentBaseline: 'center',
+      getSize: 12,
+      getTextAnchor: 'middle',
+      getPosition: d => { 
+        const v = d.geometry.coordinates;
+        return [v[0], v[1], v[2] * scale + vOffset];
+      },
+      getText: d => d.properties["vt_text"],
+      getColor: d => [12,12,0],
+      background: true,
+      backgroundPadding: [0,0],
+      getBackgroundColor: [200,200,200,255],
+    });
+    deckLayers.push(myTextDeckLayer);
+    
+    /*------------------------*
+    // 注記指示線 … 垂直になると、見えなくなるみたいなので、削除
+    const myIndicationDeckLayer = new deck.PathLayer({
+      id: 'path-layer-text-indication',
+      data: text,
+      pickable: true,
+      widthScale: 1,
+      widthMinPixels: 1,
+      getPath: d => { 
+        const v = d.geometry.coordinates;
+        const path = [
+          [v[0], v[1], v[2] * scale], 
+          [v[0], v[1], v[2] * scale + vOffset]
+        ];
+        return path;
+      },
+      getColor: [255,255,255,150],
+      getWidth: 2
+    });
+    deckLayers.push(myIndicationDeckLayer);
+    
+    //ポイントデータのテスト用
+    const myPointCloudDeckLayer = new deck.PointCloudLayer({
+      id: 'PointCloudLayer',
+      data: symbol,
+      getColor: [255, 0, 0, 255],
+      getPosition: d => { 
+        const v = d.geometry.coordinates;
+        return [v[0], v[1], v[2] * scale + 10];
+      },
+      pointSize: 2,
+      coordinateOrigin: [0, 0],
+      pickable: true
+    });
+    deckLayers.push(myPointCloudDeckLayer);
+    *------------------------*/    
+    
+  }
   
   g.deckOverlay.setProps({
-    layers: [
-      myRoadDeckLayer,
-      myRailwayDeckLayer,
-      myContourDeckLayer
-    ]
+    layers: deckLayers
   });
   map.addControl(g.deckOverlay);
   
@@ -433,7 +543,7 @@ const set3dLayers = () => {
     map.removeLayer('building-fillextrusion');
   }
   
-  if(building){
+  if(document.getElementById("showBuilding").checked && building){
     map.getSource('building3d').setData(
       building
     );
@@ -521,7 +631,7 @@ const setdownload = function(string, filename, container){
 /*************************************************/
 
 const addCard = () => {
-  console.log("add");
+  console.log("uploading file ...");
   const selectedFile = document.getElementById('addCard').files[0];
   console.log(selectedFile);
   
@@ -561,6 +671,8 @@ const addCard = () => {
         };
       }
     }
+    
+    g.d.symbol = json.symbol;
     
     g.d.building = json.building;
     
