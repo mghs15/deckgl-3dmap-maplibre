@@ -493,8 +493,7 @@ const set3dLayers = () => {
     });
     deckLayers.push(myTextDeckLayer);
     
-    /*------------------------*
-    // 注記指示線 … 垂直になると、見えなくなるみたいなので、削除
+    // 注記指示線 … 垂直になると、見えなくなる
     const myIndicationDeckLayer = new deck.PathLayer({
       id: 'path-layer-text-indication',
       data: text,
@@ -504,8 +503,8 @@ const set3dLayers = () => {
       getPath: d => { 
         const v = d.geometry.coordinates;
         const path = [
+          [v[0]+0.00001, v[1]+0.00001, v[2] * scale + vOffset],
           [v[0], v[1], v[2] * scale], 
-          [v[0], v[1], v[2] * scale + vOffset]
         ];
         return path;
       },
@@ -514,6 +513,7 @@ const set3dLayers = () => {
     });
     deckLayers.push(myIndicationDeckLayer);
     
+    /*------------------------*
     //ポイントデータのテスト用
     const myPointCloudDeckLayer = new deck.PointCloudLayer({
       id: 'PointCloudLayer',
