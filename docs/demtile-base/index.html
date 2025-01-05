@@ -80,6 +80,7 @@ button.local {
   <input type="checkbox" class="local" id="showRailway" onchange="set3dLayers();" checked>鉄道
   <input type="checkbox" class="local" id="showBuilding" onchange="set3dLayers();" checked>建物
   <input type="checkbox" class="local" id="showContour" onchange="set3dLayers();" checked>等高線<br>
+  <input type="checkbox" class="local" id="showWaterarea" onchange="set3dLayers();" checked>水域
   <input type="checkbox" class="local" id="showText" onchange="set3dLayers();" checked>注記
   <input type="checkbox" class="local" id="showIcon" onchange="set3dLayers();" checked>記号
   <button type="button" class="local" id="get3dData" onclick="action()" >3D データ取得</button>
@@ -236,6 +237,11 @@ async function action(){
     g.d.railway = await getGeojson("LineString", "RailCL", "v", zl);
   } else { g.d.railway = [] }
   
+  if(document.getElementById("showWaterarea").checked){
+    console.log("水域データを取得中...");
+    g.d.waterarea = await getGeojson("LineString", "WA", "v", zl);
+  } else { g.d.waterarea = [] }
+  
   if(document.getElementById("showText").checked || document.getElementById("showIcon").checked){
     console.log("注記・記号データを取得中...");
     g.d.symbol = await getGeojson("Point", "Anno", "v", zl);
@@ -246,14 +252,10 @@ async function action(){
     g.d.building = await getGeojson("Polygon", "BldA", "v", zl);
   } else { g.d.building = [] }
   
-  
-  const {contour, road, railway, symbol, building} = g.d;
-  
   //ダウンロード準備
   console.log(g.d);
   const results_string = JSON.stringify(g.d, null, 4);
   setdownload(results_string, filename, 'download'); //ダウンロード準備
-  
   
   //データの加工
   setStyleInfo();
@@ -391,7 +393,7 @@ const set3dLayers = () => {
     interleaved: true, layers: []
   });
   
-  const {contour, road, railway, building, symbol} = g.d;
+  const {contour, road, railway, waterarea, building, symbol} = g.d;
   
   const scale = +document.getElementById("elevScale").value || 0;
   
@@ -445,6 +447,22 @@ const set3dLayers = () => {
     deckLayers.push(myContourDeckLayer);
   }
   
+  if(document.getElementById("showWaterarea").checked){
+    //水域
+    const myWaterareaDeckLayer = new deck.PathLayer({
+      id: 'path-layer-waterarea',
+      data: waterarea,
+      pickable: true,
+      widthScale: 1,
+      widthMinPixels: 1,
+      // 簡易的に outer ring のみを表示する
+      getPath: d => d.geometry.coordinates[0].map(v => [v[0], v[1], v[2] * scale]),
+      getColor: [0,0,200],
+      getWidth: 2
+    });
+    deckLayers.push(myWaterareaDeckLayer);
+  }
+  
   if(document.getElementById("showIcon").checked){
     //記号
     const myIconDeckLayer = new deck.IconLayer({
@@ -482,7 +500,9 @@ const set3dLayers = () => {
       getSize: 12,
       getTextAnchor: 'middle',
       getPosition: d => { 
-        const v = d.geometry.coordinates;
+        const v1 = d.geometry.coordinates;
+        // ラインデータに入った注記の対応
+        const v = Array.isArray(v1[0]) ? v1[0] : v1;
         return [v[0], v[1], v[2] * scale + vOffset];
       },
       getText: d => d.properties["vt_text"],
@@ -501,7 +521,9 @@ const set3dLayers = () => {
       widthScale: 1,
       widthMinPixels: 1,
       getPath: d => { 
-        const v = d.geometry.coordinates;
+        const v1 = d.geometry.coordinates;
+        // ラインデータに入った注記の対応
+        const v = Array.isArray(v1[0]) ? v1[0] : v1;
         const path = [
           [v[0]+0.00001, v[1]+0.00001, v[2] * scale + vOffset],
           [v[0], v[1], v[2] * scale], 
@@ -671,6 +693,8 @@ const addCard = () => {
         };
       }
     }
+    
+    g.d.waterarea = json.waterarea;
     
     g.d.symbol = json.symbol;
     
