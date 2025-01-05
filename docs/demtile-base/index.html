@@ -74,10 +74,12 @@ button.local {
 <div id='menu'>
   <span>MapLibre-v5+deck.gl-v9<br>（標高タイル使用ver）</span>
   <button type="button" class="local" id="get3dData" onclick="action()" >3D</button>
+  <input type="checkbox" class="local" id="switchBack" onchange="switchBack();" checked>背景地図
   <input type="checkbox" class="local" id="showTerrain" onchange="addTerrain()" />地形を表示<br>
   <input type="checkbox" class="local" id="showTileBoundary" onchange="addTileboundary()" checked/>タイル図郭を表示<br>
   高さ強調：<input type="number" class="local" id="elevScale" onchange="set3dLayers()" min="0" value="1"/><br>
   <div><a id="download">取得データのダウンロード</a></div>
+  データのロード：<input type="file" id="addCard" onchange="addCard();">
   <div id="message"></div>
 </div>
 <script>
@@ -110,6 +112,22 @@ const addTileboundary = function(){
   map.showTileBoundaries = flag;
 }
 
+const switchBack = () => {
+  const style = map.getStyle();
+  const layers = style.layers;
+  const checked = document.getElementById("switchBack").checked;
+  layers.forEach( layer => {
+    if(layer.source == "v"){
+      if(!layer.layout) layer.layout ={};
+      if(checked){
+        map.setLayoutProperty(layer.id, "visibility", "visible");
+      }else{
+        map.setLayoutProperty(layer.id, "visibility", "none");
+      }
+    }
+  });
+}
+
 /*************************************************/
 /*DeckGL 関係設定                                */
 /*************************************************/
@@ -122,6 +140,17 @@ const addTileboundary = function(){
 const g = {
   d: {},
 };
+
+//GeoJSONとして追加するレイヤ用にSourceを用意
+map.on('load', function(){
+  map.addSource('building3d', {
+      type: 'geojson',
+      data: {
+        type: 'FeatureCollection',
+        features: []
+      }
+  });
+});
 
 //表示範囲をタイル枚数に換算
 
@@ -151,18 +180,6 @@ const checkLoadTiles = function(){
   
   return tileCount;
 }
-
-
-//GeoJSONとして追加するレイヤ用にSourceを用意
-map.on('load', function(){
-  map.addSource('building3d', {
-      type: 'geojson',
-      data: {
-        type: 'FeatureCollection',
-        features: []
-      }
-  });
-});
 
 //ボタンクリック時の処理
 async function action(){
@@ -222,6 +239,19 @@ async function action(){
   const results_string = JSON.stringify(g.d, null, 4);
   setdownload(results_string, filename, 'download'); //ダウンロード準備
   
+  
+  //データの加工
+  setStyleInfo();
+  
+  // レイヤの追加
+  set3dLayers();
+  
+}
+
+// データの加工
+const setStyleInfo = () => {
+  
+  const {contour, road, railway, building} = g.d;
   
   //道路データの加工
   for(i in road){
@@ -332,12 +362,9 @@ async function action(){
     
   }
   
-  // レイヤの追加
-  set3dLayers();
-  
 }
 
-//レイヤ追加処理
+// レイヤ追加処理
 const set3dLayers = () => {
   
   if(g.deckOverlay){
@@ -478,7 +505,7 @@ const addTerrain = function(){
 }
 
 /*************************************************/
-/*ダウンロードの処理                               */
+/* ダウンロードの処理                             */
 /*************************************************/
 
 const setdownload = function(string, filename, container){
@@ -489,6 +516,66 @@ const setdownload = function(string, filename, container){
   a.download = filename;
 }
 
+/*************************************************/
+/* データのロード処理                            */
+/*************************************************/
+
+const addCard = () => {
+  console.log("add");
+  const selectedFile = document.getElementById('addCard').files[0];
+  console.log(selectedFile);
+  
+  const reader = new FileReader();
+  reader.onload = () => {
+    
+    if(!reader.result) return;
+    
+    const json = JSON.parse(reader.result);
+    
+    g.d.contour = json.contour;
+    if(g.d.contour && g.d.contour[0]?.path) {
+      for(let i=0; i< g.d.contour.length; i++){
+        g.d.contour[i].geometry = { 
+          coordinates: g.d.contour[i].path, 
+          type: "LineString" 
+        };
+      }
+    }
+    
+    g.d.road = json.road;
+    if(g.d.road && g.d.road[0]?.path) {
+      for(let i=0; i< g.d.road.length; i++){
+        g.d.road[i].geometry = {
+          coordinates: g.d.road[i].path,
+          type: "LineString" 
+        };
+      }
+    }
+    
+    g.d.railway = json.railway;
+    if(g.d.railway && g.d.railway[0]?.path) {
+      for(let i=0; i< g.d.railway.length; i++){
+        g.d.railway[i].geometry = {
+          coordinates: g.d.railway[i].path,
+          type: "LineString"
+        };
+      }
+    }
+    
+    g.d.building = json.building;
+    
+    //データの加工
+    setStyleInfo();
+    // レイヤの追加
+    set3dLayers();
+    
+    const parent = document.getElementById('message');
+    parent.innerHTML = "読み込み完了！";
+    
+  }
+  
+  reader.readAsText(selectedFile, 'utf-8');
+}
 
 </script>
  
