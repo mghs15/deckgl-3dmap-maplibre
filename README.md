@@ -5,6 +5,8 @@ deck.gl を用いて国土地理院のデータを 3D 風に表示する試行
 
 https://github.com/mghs15/deckgl_3dseamlessmap
 
+解説ブログ：https://qiita.com/mg_kudo/items/f6ea34938d5d0f3d326a
+
 （関連ブログ：https://qiita.com/mg_kudo/items/6079ac10b7994e391228 ）
 
 ライブラリの最新化の他、[既存のレポジトリ](https://github.com/mghs15/deckgl_3dseamlessmap)と比較し、以下の点を改良
@@ -13,6 +15,9 @@ https://github.com/mghs15/deckgl_3dseamlessmap
 * 高さの強調機能を実装
 * 等高線データだけではなく、標高タイルを用いた実装も追加
   * 標高タイルを用いる実装の場合、データ構造を GeoJSON に準じたものへ変更
+  * 注記や記号についても deck.gl の TextLayer や IconLayer を用いて実装
+  * 水域については PathLayer を用いて実装
+  * 各データごとの表示・非表示機能を強化
 * 注：TerrainLayer との共存は課題あり
 
 ## デモサイト
