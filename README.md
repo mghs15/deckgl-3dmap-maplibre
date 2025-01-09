@@ -1,9 +1,15 @@
 # deckgl-3dmap-maplibre
 deck.gl を用いて国土地理院のデータを 3D 風に表示する試行
 
-以下のレポジトリをベースに、最新の deck.gl (v9)、MapLibre GL JS (v5)等、最新版を利用し、国土地理院最適化ベクトルタイル（PMTiles）の三次元風の表現を行ったサイト。
+[既存レポジトリ](https://github.com/mghs15/deckgl_3dseamlessmap)をベースに、最新の deck.gl (v9)、MapLibre GL JS (v5)等、最新版を利用し、国土地理院最適化ベクトルタイル（PMTiles）の三次元風の表現を行ったサイト。
 
-https://github.com/mghs15/deckgl_3dseamlessmap
+## デモサイト
+* 標高の取得に等高線を用いたもの
+  https://mghs15.github.io/deckgl-3dmap-maplibre/contour-base/
+* 標高の取得に標高タイルを用いたもの
+  https://mghs15.github.io/deckgl-3dmap-maplibre/demtile-base/
+
+## 機能等の説明
 
 解説ブログ：https://qiita.com/mg_kudo/items/f6ea34938d5d0f3d326a
 
@@ -16,15 +22,9 @@ https://github.com/mghs15/deckgl_3dseamlessmap
 * 等高線データだけではなく、標高タイルを用いた実装も追加
   * 標高タイルを用いる実装の場合、データ構造を GeoJSON に準じたものへ変更
   * 注記や記号についても deck.gl の TextLayer や IconLayer を用いて実装
-  * 水域については PathLayer を用いて実装
+  * 水域、境界については PathLayer を用いて実装
   * 各データごとの表示・非表示機能を強化
 * 注：TerrainLayer との共存は課題あり
-
-## デモサイト
-* 標高の取得に等高線を用いたもの
-  https://mghs15.github.io/deckgl-3dmap-maplibre/contour-base/
-* 標高の取得に標高タイルを用いたもの
-  https://mghs15.github.io/deckgl-3dmap-maplibre/demtile-base/
   
 ## 特記点
 
