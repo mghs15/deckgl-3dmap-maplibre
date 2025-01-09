@@ -81,6 +81,7 @@ button.local {
   <input type="checkbox" class="local" id="showBuilding" onchange="set3dLayers();" checked>建物
   <input type="checkbox" class="local" id="showContour" onchange="set3dLayers();" checked>等高線<br>
   <input type="checkbox" class="local" id="showWaterarea" onchange="set3dLayers();" checked>水域
+  <input type="checkbox" class="local" id="showBorder" onchange="set3dLayers();" checked>境界
   <input type="checkbox" class="local" id="showText" onchange="set3dLayers();" checked>注記
   <input type="checkbox" class="local" id="showIcon" onchange="set3dLayers();" checked>記号
   <button type="button" class="local" id="get3dData" onclick="action()" >3D データ取得</button>
@@ -242,6 +243,11 @@ async function action(){
     g.d.waterarea = await getGeojson("LineString", "WA", "v", zl);
   } else { g.d.waterarea = [] }
   
+  if(document.getElementById("showBorder").checked){
+    console.log("境界データを取得中...");
+    g.d.border = await getGeojson("LineString", "AdmBdry", "v", zl);
+  } else { g.d.border = [] }
+  
   if(document.getElementById("showText").checked || document.getElementById("showIcon").checked){
     console.log("注記・記号データを取得中...");
     g.d.symbol = await getGeojson("Point", "Anno", "v", zl);
@@ -393,7 +399,7 @@ const set3dLayers = () => {
     interleaved: true, layers: []
   });
   
-  const {contour, road, railway, waterarea, building, symbol} = g.d;
+  const {contour, road, railway, waterarea, border, building, symbol} = g.d;
   
   const scale = +document.getElementById("elevScale").value || 0;
   
@@ -463,6 +469,21 @@ const set3dLayers = () => {
     deckLayers.push(myWaterareaDeckLayer);
   }
   
+  if(document.getElementById("showBorder").checked){
+    //境界
+    const myBorderDeckLayer = new deck.PathLayer({
+      id: 'path-layer-border',
+      data: border,
+      pickable: true,
+      widthScale: 1,
+      widthMinPixels: 1,
+      getPath: d => d.geometry.coordinates.map(v => [v[0], v[1], v[2] * scale]),
+      getColor: [68,0,128,100],
+      getWidth: 8
+    });
+    deckLayers.push(myBorderDeckLayer);
+  }
+  
   if(document.getElementById("showIcon").checked){
     //記号
     const myIconDeckLayer = new deck.IconLayer({
@@ -480,7 +501,7 @@ const set3dLayers = () => {
         const v = d.geometry.coordinates;
         return [v[0], v[1], v[2] * scale + 0];
       },
-      getSize: 48,
+      getSize: 32,
       getColor: [255,0,0],
       pickable: true
     });
@@ -510,6 +531,9 @@ const set3dLayers = () => {
       background: true,
       backgroundPadding: [0,0],
       getBackgroundColor: [200,200,200,255],
+      fontSettings: {sdf: true},
+      outlineWidth: 2, 
+      outlineColor:  [200,200,200,255],
     });
     deckLayers.push(myTextDeckLayer);
     
@@ -695,6 +719,8 @@ const addCard = () => {
     }
     
     g.d.waterarea = json.waterarea;
+    
+    g.d.border = json.border;
     
     g.d.symbol = json.symbol;
     
