@@ -24,7 +24,9 @@ deck.gl を用いて国土地理院のデータを 3D 風に表示する試行
   * 注記や記号についても deck.gl の TextLayer や IconLayer を用いて実装
   * 水域、境界については PathLayer を用いて実装
   * 各データごとの表示・非表示機能を強化
-* 注：TerrainLayer との共存は課題あり
+    
+> [!WARNING]
+> 注：TerrainLayer との共存は課題あり
   
 ## 特記点
 
