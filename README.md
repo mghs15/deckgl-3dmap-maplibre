@@ -10,10 +10,10 @@ deck.gl を用いて国土地理院のデータを 3D 風に表示する試行
   https://mghs15.github.io/deckgl-3dmap-maplibre/demtile-base/
 
 ## 機能等の説明
-
-解説ブログ：https://qiita.com/mg_kudo/items/f6ea34938d5d0f3d326a
-
-（関連ブログ：https://qiita.com/mg_kudo/items/6079ac10b7994e391228 ）
+> [!TIP]
+> 解説ブログ：https://qiita.com/mg_kudo/items/f6ea34938d5d0f3d326a
+>
+>（関連ブログ：https://qiita.com/mg_kudo/items/6079ac10b7994e391228 ）
 
 ライブラリの最新化の他、[既存のレポジトリ](https://github.com/mghs15/deckgl_3dseamlessmap)と比較し、以下の点を改良
 * 等高線データに対して、turf.js の `simplify()` を利用して頂点数を削減することで、品質を犠牲にパフォーマンスを向上
